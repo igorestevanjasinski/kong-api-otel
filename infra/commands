@@ -1,0 +1,9 @@
+docker run --name opentelemetry-collector --network=kong-net  -p 4317:4317  -p 4318:4318  -p 55679:55679  -v $(pwd)/otel-collector.yaml:/etc/otelcol-contrib/otel-collector-config.yaml  otel/opentelemetry-collector-contrib:0.91.0  --config=/etc/otelcol-contrib/otel-collector-config.yaml
+
+docker run -d --name tempo --network=kong-net  -p 4317  -p 4318  -p 3200:3200  -v $(pwd)/tempo.yaml:/etc/tempo.yaml grafana/tempo:latest  --config.file=/etc/tempo.yaml
+
+
+docker run -d --name grafana --network=kong-net  -p 3000:3000 -e "GF_AUTH_ANONYMOUS_ENABLED=true" -e "GF_AUTH_ANONYMOUS_ORG_ROLE=Admin" -e "GF_FEATURE_TOGGLES_ENABLE=traceqlEditor" -e "GF_AUTH_DISABLE_LOGIN_FORM=true"  -v $(pwd)/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml  grafana/grafana:10.1.1
+
+
+docker run -d --name temperature --network=kong-net  -p 8080:8080 -e "OTEL_SERVICE_NAME=temperature" -e "OTEL_TRACES_EXPORTER=otlp" -e "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel-collector:4318" igorestevanjasinski/temperature:s2
